@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PATIENT
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  LOST
+}
+
+enum AppointmentStatus {
+  REQUESTED
+  CONFIRMED
+  RESCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum AnalyticsEventType {
+  PAGE_VIEW
+  WHATSAPP_CLICK
+  APPOINTMENT_SUBMIT
+  LEAD_SUBMIT
+  CTA_CLICK
+}
+
+model User {
+  id            String        @id @default(cuid())
+  name          String
+  email         String?       @unique
+  phone         String?       @unique
+  role          UserRole      @default(PATIENT)
+  passwordHash  String?
+  appointments  Appointment[]
+  leads         Lead[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+
+  @@index([phone])
+  @@index([email])
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(ADMIN)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Appointment {
+  id             String            @id @default(cuid())
+  patientName    String
+  phone          String
+  email          String?
+  concern        String
+  preferredDate  DateTime?
+  preferredSlot  String?
+  status         AppointmentStatus @default(REQUESTED)
+  source         String            @default("website")
+  notes          String?
+  userId         String?
+  user           User?             @relation(fields: [userId], references: [id])
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  deletedAt      DateTime?
+
+  @@index([phone])
+  @@index([status, createdAt])
+}
+
+model Service {
+  id          String      @id @default(cuid())
+  title       String
+  slug        String      @unique
+  summary     String
+  content     String
+  icon        String?
+  isFeatured  Boolean     @default(false)
+  seoMetadata SeoMetadata?
+  faqs        FAQ[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+}
+
+model Testimonial {
+  id          String   @id @default(cuid())
+  patientName String
+  result      String
+  quote       String
+  rating      Int      @default(5)
+  isFeatured  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+}
+
+model Blog {
+  id          String      @id @default(cuid())
+  title       String
+  slug        String      @unique
+  excerpt     String
+  content     String
+  coverImage  String?
+  publishedAt DateTime?
+  categoryId  String?
+  category    Category?   @relation(fields: [categoryId], references: [id])
+  seoMetadata SeoMetadata?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  @@index([slug])
+  @@index([publishedAt])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  blogs     Blog[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FAQ {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  serviceId String?
+  service   Service? @relation(fields: [serviceId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Lead {
+  id        String     @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  concern   String
+  source    String
+  status    LeadStatus @default(NEW)
+  utmSource String?
+  utmMedium String?
+  utmCampaign String?
+  userId    String?
+  user      User?      @relation(fields: [userId], references: [id])
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  deletedAt DateTime?
+
+  @@index([phone])
+  @@index([status, createdAt])
+}
+
+model SeoMetadata {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  keywords    String[]
+  canonical   String?
+  ogImage     String?
+  blogId      String?  @unique
+  blog        Blog?    @relation(fields: [blogId], references: [id])
+  serviceId   String?  @unique
+  service     Service? @relation(fields: [serviceId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  url       String
+  alt       String
+  mimeType  String
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ContactInquiry {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  message   String
+  source    String   @default("contact")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+}
+
+model AnalyticsEvent {
+  id        String             @id @default(cuid())
+  type      AnalyticsEventType
+  path      String
+  source    String?
+  metadata  Json?
+  ipHash    String?
+  userAgent String?
+  createdAt DateTime           @default(now())
+
+  @@index([type, createdAt])
+  @@index([path])
+}
