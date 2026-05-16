@@ -59,13 +59,13 @@ export function HeroSection() {
           </div>
         </div>
         <div className="relative min-h-[420px] overflow-hidden rounded-md bg-muted shadow-clinical">
-          <Image
-            src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=85"
-            alt="Premium healthcare consultation environment"
-            fill
-            priority
-            className="object-cover"
-          />
+           <Image
+  src="/doctor.jpeg"
+  alt="Dr. Vivek Malviya - Best Dietitian in Bhopal"
+  fill
+  priority
+  className="object-cover object-top"
+/>
           <div className="absolute bottom-4 left-4 right-4 grid gap-3 bg-white/92 p-4 backdrop-blur sm:grid-cols-3">
             {[
               ["8+", "Care programs"],
